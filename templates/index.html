@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAASTA AI - Live Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="logo-container">
+                <h2>RAASTA <span>AI</span></h2>
+                <div class="tagline">See the Risk Before It Reaches You</div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn active">📊 Dashboard</button>
+                <button class="nav-btn">📈 Analytics</button>
+                <button class="nav-btn">⚙️ Settings</button>
+            </div>
+            <div class="sys-status">
+                <div class="dot"></div>
+                <div class="status-text">
+                    <span class="label">System Status</span>
+                    <span class="value">OPERATIONAL</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Layout -->
+        <div class="main-grid">
+            
+            <!-- Left Column (Video & Primary Stats) -->
+            <div class="col-main">
+                
+                <div class="panel video-panel">
+                    <div class="panel-header">LIVE ROAD ANALYSIS</div>
+                    <div class="video-container">
+                        <img src="{{ url_for('video_feed') }}" id="video-stream" alt="Live Feed">
+                        <!-- Critical Overlay Triggered via JS -->
+                        <div id="critical-overlay" class="hidden">
+                            <div class="warning-icon">⚠️</div>
+                            <div class="warning-title">WARNING: VEHICLE AHEAD</div>
+                            <div class="warning-subtitle">HIGH COLLISION RISK - BRAKE IMMEDIATELY</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel telemetry-panel">
+                    <div class="panel-header">ENVIRONMENT & TELEMETRY</div>
+                    <div class="stat-row">
+                        <div class="stat-box">
+                            <div class="val text-blue"><span id="speed-val">0</span> <small>km/h</small></div>
+                            <div class="lbl">Current Speed</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="val text-green">CLEAR</div>
+                            <div class="lbl">Weather</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="val text-yellow">DRY</div>
+                            <div class="lbl">Road Surface</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="val text-purple"><span id="ttc-val">0.0</span>s</div>
+                            <div class="lbl">Est. Time-to-Collision</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel summary-panel">
+                    <div class="panel-header">DETECTION SUMMARY</div>
+                    <div class="stat-row" id="detection-stats">
+                        <div class="stat-box"><div class="val text-red" id="v-count">0</div><div class="lbl">Vehicles</div></div>
+                        <div class="stat-box"><div class="val text-yellow" id="p-count">0</div><div class="lbl">Pedestrians</div></div>
+                        <div class="stat-box"><div class="val text-green" id="c-count">0</div><div class="lbl">Cyclists</div></div>
+                        <div class="stat-box"><div class="val text-blue" id="t-count">0</div><div class="lbl">Trucks</div></div>
+                        <div class="stat-box"><div class="val text-purple" id="b-count">0</div><div class="lbl">Buses</div></div>
+                        <div class="stat-box"><div class="val text-orange" id="l-count">0</div><div class="lbl">Traffic Lights</div></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column (Risk & Alerts) -->
+            <div class="col-right">
+                
+                <div class="panel risk-panel" id="risk-panel-bg">
+                    <div class="panel-header text-center">COLLISION RISK</div>
+                    <div class="gauge-container">
+                        <div class="gauge-bar" id="gauge-bar"></div>
+                    </div>
+                    <div class="gauge-text" id="gauge-text">0%</div>
+                </div>
+
+                <div class="panel lane-panel">
+                    <div class="panel-header">LANE KEEP ASSIST</div>
+                    <div class="lane-content">
+                        <div class="lane-icon">🛣️</div>
+                        <div class="lane-info text-right">
+                            <div class="lane-status" id="lane-status">STABLE</div>
+                            <div class="lane-conf">Confidence: <span id="lane-conf">High</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel factors-panel">
+                    <div class="panel-header">RISK FACTORS</div>
+                    <ul class="factor-list">
+                        <li><span class="check">✓</span> Object in driving corridor</li>
+                        <li><span class="check">✓</span> Large object in frame</li>
+                        <li><span class="check">✓</span> Near to vehicle</li>
+                        <li><span class="check">✓</span> Approaching trajectory</li>
+                    </ul>
+                </div>
+
+                <div class="panel alerts-panel">
+                    <div class="panel-header">RECENT ALERTS</div>
+                    <div class="alerts-list" id="alerts-list">
+                        <!-- Alerts will be injected here via JS -->
+                        <div class="alert-item safe">
+                            <span class="time">● 00:00:00</span>
+                            <span class="msg">SYSTEM INITIATED</span>
+                            <span class="level">SAFE</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
