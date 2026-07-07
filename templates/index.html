@@ -3,135 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAASTA AI - Live Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <title>RAASTA AI - ADAS Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Top Navigation -->
-        <nav class="top-nav">
-            <div class="logo-container">
-                <h2>RAASTA <span>AI</span></h2>
-                <div class="tagline">See the Risk Before It Reaches You</div>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn active">📊 Dashboard</button>
-                <button class="nav-btn">📈 Analytics</button>
-                <button class="nav-btn">⚙️ Settings</button>
-            </div>
-            <div class="sys-status">
-                <div class="dot"></div>
-                <div class="status-text">
-                    <span class="label">System Status</span>
-                    <span class="value">OPERATIONAL</span>
+    <div class="shell">
+        <aside class="sidebar">
+            <div class="brand-row">
+                <div class="mark" aria-hidden="true"><span></span></div>
+                <div>
+                    <div class="brand">RAASTA <b>AI</b></div>
+                    <div class="tagline">See the Risk Before It Reaches You</div>
                 </div>
             </div>
-        </nav>
-
-        <!-- Main Content Layout -->
-        <div class="main-grid">
-            
-            <!-- Left Column (Video & Primary Stats) -->
-            <div class="col-main">
-                
-                <div class="panel video-panel">
-                    <div class="panel-header">LIVE ROAD ANALYSIS</div>
-                    <div class="video-container">
-                        <img src="{{ url_for('video_feed') }}" id="video-stream" alt="Live Feed">
-                        <!-- Critical Overlay Triggered via JS -->
-                        <div id="critical-overlay" class="hidden">
-                            <div class="warning-icon">⚠️</div>
-                            <div class="warning-title">WARNING: VEHICLE AHEAD</div>
-                            <div class="warning-subtitle">HIGH COLLISION RISK - BRAKE IMMEDIATELY</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel telemetry-panel">
-                    <div class="panel-header">ENVIRONMENT & TELEMETRY</div>
-                    <div class="stat-row">
-                        <div class="stat-box">
-                            <div class="val text-blue"><span id="speed-val">0</span> <small>km/h</small></div>
-                            <div class="lbl">Current Speed</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="val text-green">CLEAR</div>
-                            <div class="lbl">Weather</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="val text-yellow">DRY</div>
-                            <div class="lbl">Road Surface</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="val text-purple"><span id="ttc-val">0.0</span>s</div>
-                            <div class="lbl">Est. Time-to-Collision</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel summary-panel">
-                    <div class="panel-header">DETECTION SUMMARY</div>
-                    <div class="stat-row" id="detection-stats">
-                        <div class="stat-box"><div class="val text-red" id="v-count">0</div><div class="lbl">Vehicles</div></div>
-                        <div class="stat-box"><div class="val text-yellow" id="p-count">0</div><div class="lbl">Pedestrians</div></div>
-                        <div class="stat-box"><div class="val text-green" id="c-count">0</div><div class="lbl">Cyclists</div></div>
-                        <div class="stat-box"><div class="val text-blue" id="t-count">0</div><div class="lbl">Trucks</div></div>
-                        <div class="stat-box"><div class="val text-purple" id="b-count">0</div><div class="lbl">Buses</div></div>
-                        <div class="stat-box"><div class="val text-orange" id="l-count">0</div><div class="lbl">Traffic Lights</div></div>
-                    </div>
-                </div>
-
+            <nav class="rail-nav" aria-label="Primary">
+                <button class="active" data-view="dashboard"><span>GRID</span>Dashboard</button>
+                <button data-view="detections"><span>BOX</span>Detections</button>
+                <button data-view="lane"><span>LANE</span>Lane Assist</button>
+                <button data-view="risk"><span>WARN</span>Risk Analysis</button>
+                <button data-view="stats"><span>BAR</span>Statistics</button>
+                <button data-view="alerts"><span>TIME</span>Alert History</button>
+                <button data-view="settings"><span>SET</span>Settings</button>
+            </nav>
+            <div class="source-card">
+                <div class="source-title">Video Source</div>
+                <div class="source-name">{{ current_video_name }}</div>
+                <form class="upload-form" action="{{ url_for('upload_video') }}" method="post" enctype="multipart/form-data">
+                    <label class="upload-label" for="video-upload">Upload video</label>
+                    <input id="video-upload" type="file" name="video" accept="video/mp4,video/avi,video/mov,video/mkv" required>
+                    <button type="submit">Load video</button>
+                </form>
             </div>
-
-            <!-- Right Column (Risk & Alerts) -->
-            <div class="col-right">
-                
-                <div class="panel risk-panel" id="risk-panel-bg">
-                    <div class="panel-header text-center">COLLISION RISK</div>
-                    <div class="gauge-container">
-                        <div class="gauge-bar" id="gauge-bar"></div>
-                    </div>
-                    <div class="gauge-text" id="gauge-text">0%</div>
-                </div>
-
-                <div class="panel lane-panel">
-                    <div class="panel-header">LANE KEEP ASSIST</div>
-                    <div class="lane-content">
-                        <div class="lane-icon">🛣️</div>
-                        <div class="lane-info text-right">
-                            <div class="lane-status" id="lane-status">STABLE</div>
-                            <div class="lane-conf">Confidence: <span id="lane-conf">High</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel factors-panel">
-                    <div class="panel-header">RISK FACTORS</div>
-                    <ul class="factor-list">
-                        <li><span class="check">✓</span> Object in driving corridor</li>
-                        <li><span class="check">✓</span> Large object in frame</li>
-                        <li><span class="check">✓</span> Near to vehicle</li>
-                        <li><span class="check">✓</span> Approaching trajectory</li>
-                    </ul>
-                </div>
-
-                <div class="panel alerts-panel">
-                    <div class="panel-header">RECENT ALERTS</div>
-                    <div class="alerts-list" id="alerts-list">
-                        <!-- Alerts will be injected here via JS -->
-                        <div class="alert-item safe">
-                            <span class="time">● 00:00:00</span>
-                            <span class="msg">SYSTEM INITIATED</span>
-                            <span class="level">SAFE</span>
-                        </div>
-                    </div>
-                </div>
-
+            <div class="rail-footer">
+                <div class="car-wire"></div>
+                <div class="rail-title">RAASTA <b>AI</b></div>
+                <div class="rail-sub">ADAS AT THE EDGE</div>
+                <div class="mini-status"><i></i><span><small>System Status</small>Operational</span></div>
             </div>
-        </div>
+        </aside>
+
+        <main class="dashboard">
+            <header class="topbar">
+                <div class="top-card mode-card"><small>Mode</small><strong>VIDEO</strong></div>
+                <div class="top-card stats-card">
+                    <div><small>FPS</small><strong id="fps-val">—</strong></div>
+                    <div><small>Resolution</small><strong id="res-val">—</strong></div>
+                    <div><small>Duration</small><strong id="duration-val">00:00:00</strong></div>
+                    <div><small>Status</small><strong class="ok"><i></i>Waiting</strong></div>
+                </div>
+                <div class="top-card clock-card"><strong id="clock-val">--:--:--</strong><small id="date-val">--</small><button id="end-session-btn">End Session</button></div>
+            </header>
+
+            <!-- ═══════════ DASHBOARD VIEW ═══════════ -->
+            <section class="view-section active" id="view-dashboard">
+                <section class="content-grid">
+                    <section class="primary">
+                        <div class="video-frame panel-tight">
+                            <img src="{{ url_for('video_feed') }}" id="video-stream" alt="Live Feed">
+                            <div class="rec-badge"><i></i>REC</div>
+                            <div class="speed-card"><small>Speed</small><strong><span id="speed-val">—</span></strong><em>km/h</em></div>
+                            <div id="critical-overlay" class="hidden">
+                                <div class="warning-icon">!</div>
+                                <div class="warning-title">WARNING: VEHICLE AHEAD</div>
+                                <div class="warning-subtitle">HIGH COLLISION RISK - BRAKE IMMEDIATELY</div>
+                            </div>
+                        </div>
+
+                        <div class="lower-grid">
+                            <section class="panel lane-card">
+                                <h3>Lane Detection</h3>
+                                <div class="lane-preview"><img src="{{ url_for('video_feed') }}" alt="Lane feed preview"></div>
+                                <div class="lane-stats"><span>Lane Status <b id="lane-status">Waiting</b></span><span>Lane Departure <b id="lane-conf">—</b></span></div>
+                            </section>
+                            <section class="panel trend-card">
+                                <h3>Collision Risk Trend</h3>
+                                <div class="chart-wrap"><canvas id="risk-chart" width="420" height="180"></canvas><div class="chart-badge" id="chart-badge">—</div></div>
+                            </section>
+                            <section class="panel threats-card">
+                                <h3>Top Threats</h3>
+                                <ol id="threat-list">
+                                    <li><span>—</span>Awaiting detection <b>—</b></li>
+                                </ol>
+                            </section>
+                        </div>
+
+                        <section class="warning-strip" id="warning-strip">
+                            <div class="warn-symbol">!</div>
+                            <div><strong id="warning-title">Monitoring</strong><span id="warning-copy">Awaiting live video analysis.</span></div>
+                            <div><small>Time To Collision (Est.)</small><b><span id="ttc-val">—</span> s</b></div>
+                            <div><small>Action Suggestion</small><b id="action-val">Stand by</b></div>
+                        </section>
+                    </section>
+
+                    <aside class="insights">
+                        <section class="panel risk-panel" id="risk-panel-bg">
+                            <h3>Risk Overview</h3>
+                            <div class="gauge-shell">
+                                <div class="gauge-arc"></div>
+                                <div class="gauge-text"><strong id="gauge-text">—</strong><span>%</span><em id="risk-label">Waiting</em></div>
+                            </div>
+                            <p id="risk-copy">No live risk reading yet.</p>
+                            <div class="risk-level"><small>Risk Level</small><div><span>Safe</span><span>Caution</span><span>Warning</span><b>Critical</b></div></div>
+                        </section>
+                        <section class="panel detection-panel">
+                            <h3>Detection Summary</h3>
+                            <div class="total-row"><span>Total Objects</span><b id="total-count">0</b></div>
+                            <div class="detection-grid">
+                                <div><i class="vehicle"></i><span>Vehicles</span><b id="v-count">0</b></div>
+                                <div><i class="person"></i><span>Pedestrians</span><b id="p-count">0</b></div>
+                                <div><i class="cycle"></i><span>Cyclists</span><b id="c-count">0</b></div>
+                                <div><i class="truck"></i><span>Trucks</span><b id="t-count">0</b></div>
+                                <div><i class="bus"></i><span>Buses</span><b id="b-count">0</b></div>
+                                <div><i class="sign"></i><span>Traffic Signs</span><b id="l-count">0</b></div>
+                            </div>
+                        </section>
+                        <section class="panel factors-panel">
+                            <h3>Risk Factors</h3>
+                            <ul class="factor-list" id="factor-list">
+                                <li><i></i><span>No live factors yet</span><b>—</b></li>
+                            </ul>
+                        </section>
+                        <div class="info-grid">
+                            <section class="panel info-card"><h3>Session Info</h3><p><span>File Name</span><b>{{ current_video_name }}</b></p><p><span>File Resolution</span><b id="session-res">—</b></p><p><span>Frame Rate</span><b id="session-fps">—</b></p><p><span>Duration</span><b id="session-duration">00:00:00</b></p><p><span>Processed</span><b id="processed-val">00:00:00</b></p></section>
+                            <section class="panel info-card"><h3>System Info</h3><p><span>System</span><b>RAASTA AI</b></p><p><span>Platform</span><b>Live Vision</b></p><p><span>Model</span><b>YOLOv8n</b></p><p><span>Inference</span><b>Live</b></p><p><span>Device</span><b>CPU</b></p></section>
+                        </div>
+                    </aside>
+                </section>
+            </section>
+
+            <!-- ═══════════ DETECTIONS VIEW ═══════════ -->
+            <section class="view-section" id="view-detections">
+                <div class="view-page">
+                    <h2 class="view-heading">Object Detections</h2>
+                    <div class="det-full-grid">
+                        <div class="panel det-live-panel">
+                            <h3>Live Detection Feed</h3>
+                            <div class="det-live-video"><img src="{{ url_for('video_feed') }}" alt="Detection Feed"></div>
+                        </div>
+                        <div class="panel det-stats-panel">
+                            <h3>Detection Breakdown</h3>
+                            <div class="det-stat-rows" id="det-stat-rows">
+                                <div class="det-stat-row"><span class="det-icon vehicle-icon"></span><span class="det-label">Vehicles</span><b class="det-value" id="det-vehicles">0</b></div>
+                                <div class="det-stat-row"><span class="det-icon person-icon"></span><span class="det-label">Pedestrians</span><b class="det-value" id="det-pedestrians">0</b></div>
+                                <div class="det-stat-row"><span class="det-icon cycle-icon"></span><span class="det-label">Cyclists</span><b class="det-value" id="det-cyclists">0</b></div>
+                                <div class="det-stat-row"><span class="det-icon truck-icon"></span><span class="det-label">Trucks</span><b class="det-value" id="det-trucks">0</b></div>
+                                <div class="det-stat-row"><span class="det-icon bus-icon"></span><span class="det-label">Buses</span><b class="det-value" id="det-buses">0</b></div>
+                                <div class="det-stat-row"><span class="det-icon sign-icon"></span><span class="det-label">Traffic Signs</span><b class="det-value" id="det-signs">0</b></div>
+                            </div>
+                            <div class="det-total-bar"><span>Total Detected</span><b id="det-total">0</b></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════ LANE ASSIST VIEW ═══════════ -->
+            <section class="view-section" id="view-lane">
+                <div class="view-page">
+                    <h2 class="view-heading">Lane Keep Assist</h2>
+                    <div class="lane-full-grid">
+                        <div class="panel lane-live-panel">
+                            <h3>Lane Detection Feed</h3>
+                            <div class="lane-live-video"><img src="{{ url_for('video_feed') }}" alt="Lane Feed"></div>
+                        </div>
+                        <div class="panel lane-metrics-panel">
+                            <h3>Lane Metrics</h3>
+                            <div class="lane-metric-box"><span class="lane-metric-label">Lane Status</span><b class="lane-metric-value" id="lane-metric-status" style="color:var(--green)">STABLE</b></div>
+                            <div class="lane-metric-box"><span class="lane-metric-label">Lane Confidence</span><b class="lane-metric-value" id="lane-metric-conf" style="color:var(--cyan)">HIGH</b></div>
+                            <div class="lane-metric-box"><span class="lane-metric-label">Lane Departure</span><b class="lane-metric-value" id="lane-metric-dep" style="color:var(--blue)">0%</b></div>
+                            <div class="lane-metric-box"><span class="lane-metric-label">Drift Events</span><b class="lane-metric-value" id="lane-drift-count" style="color:var(--yellow)">0</b></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════ RISK ANALYSIS VIEW ═══════════ -->
+            <section class="view-section" id="view-risk">
+                <div class="view-page">
+                    <h2 class="view-heading">Collision Risk Analysis</h2>
+                    <div class="risk-full-grid">
+                        <div class="panel risk-gauge-panel">
+                            <h3>Current Risk Level</h3>
+                            <div class="risk-big-gauge">
+                                <div class="risk-big-number" id="risk-big-val">0</div>
+                                <div class="risk-big-percent">%</div>
+                                <div class="risk-big-label" id="risk-big-label">SAFE</div>
+                            </div>
+                            <p class="risk-big-desc" id="risk-big-desc">Road corridor is stable. Continue monitoring surroundings.</p>
+                        </div>
+                        <div class="panel risk-ttc-panel">
+                            <h3>Time To Collision</h3>
+                            <div class="risk-ttc-big"><b id="risk-ttc-big-val">5.0</b><span>seconds</span></div>
+                            <div class="risk-ttc-action"><small>Action</small><b id="risk-ttc-action">Continue</b></div>
+                        </div>
+                        <div class="panel risk-factors-panel">
+                            <h3>Active Risk Factors</h3>
+                            <ul class="factor-list" id="risk-factor-list">
+                                <li><i></i><span>No active risk factors</span><b>Safe</b></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════ STATISTICS VIEW ═══════════ -->
+            <section class="view-section" id="view-stats">
+                <div class="view-page">
+                    <h2 class="view-heading">Session Statistics</h2>
+                    <div class="stats-cards">
+                        <div class="panel stat-card"><h3>Frames Processed</h3><b class="stat-big" id="stat-frames">0</b></div>
+                        <div class="panel stat-card"><h3>Total Alerts</h3><b class="stat-big" style="color:var(--red)" id="stat-alerts">0</b></div>
+                        <div class="panel stat-card"><h3>Max Risk Score</h3><b class="stat-big" style="color:var(--orange)" id="stat-max-risk">0%</b></div>
+                        <div class="panel stat-card"><h3>Session Uptime</h3><b class="stat-big" style="color:var(--cyan)" id="stat-uptime">00:00:00</b></div>
+                    </div>
+                    <div class="panel stat-perf-panel">
+                        <h3>Live Detection Summary</h3>
+                        <div class="perf-bars">
+                            <div class="perf-row"><span>Detected</span><div class="perf-bar"><div class="perf-fill" id="perf-cpu" style="width:0%;background:var(--blue)"></div></div><b id="perf-cpu-val">0</b></div>
+                            <div class="perf-row"><span>Risk</span><div class="perf-bar"><div class="perf-fill" id="perf-ram" style="width:0%;background:var(--purple)"></div></div><b id="perf-ram-val">0%</b></div>
+                            <div class="perf-row"><span>Alerts</span><div class="perf-bar"><div class="perf-fill" id="perf-gpu" style="width:0%;background:var(--green)"></div></div><b id="perf-gpu-val">0</b></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════ ALERT HISTORY VIEW ═══════════ -->
+            <section class="view-section" id="view-alerts">
+                <div class="view-page">
+                    <h2 class="view-heading">Alert History</h2>
+                    <div class="panel alerts-panel">
+                        <div class="alerts-header"><h3>Recent Alerts</h3><button class="clear-alerts-btn" id="clear-alerts-btn">Clear All</button></div>
+                        <div class="alert-list" id="alert-list">
+                            <div class="alert-empty">No alerts recorded yet. Alerts will appear here during analysis.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════ SETTINGS VIEW ═══════════ -->
+            <section class="view-section" id="view-settings">
+                <div class="view-page">
+                    <h2 class="view-heading">Settings</h2>
+                    <div class="settings-grid">
+                        <div class="panel settings-card">
+                            <h3>Detection Configuration</h3>
+                            <div class="settings-row"><span>YOLO Model</span><b>YOLOv8n</b></div>
+                            <div class="settings-row"><span>Confidence Threshold</span><b>0.40</b></div>
+                            <div class="settings-row"><span>IOU Threshold</span><b>0.45</b></div>
+                            <div class="settings-row"><span>Target Classes</span><b>Person, Car, Bicycle, Bus, Truck, Traffic Light</b></div>
+                        </div>
+                        <div class="panel settings-card">
+                            <h3>Risk Thresholds</h3>
+                            <div class="settings-row"><span>Critical Area Ratio</span><b>0.15</b></div>
+                            <div class="settings-row"><span>High Area Ratio</span><b>0.05</b></div>
+                            <div class="settings-row"><span>Medium Area Ratio</span><b>0.01</b></div>
+                        </div>
+                        <div class="panel settings-card">
+                            <h3>System Information</h3>
+                            <div class="settings-row"><span>Version</span><b>RAASTA AI v1.0</b></div>
+                            <div class="settings-row"><span>Platform</span><b>Edge Device</b></div>
+                            <div class="settings-row"><span>Inference Engine</span><b>ONNX Runtime</b></div>
+                            <div class="settings-row"><span>Device</span><b>CPU</b></div>
+                            <div class="settings-row"><span>Video Backend</span><b>OpenCV / Flask MJPEG</b></div>
+                        </div>
+                        <div class="panel settings-card">
+                            <h3>Server</h3>
+                            <div class="settings-row"><span>Host</span><b>0.0.0.0:5000</b></div>
+                            <div class="settings-row"><span>Telemetry Rate</span><b>250ms</b></div>
+                            <div class="settings-row"><span>Video Codec</span><b>MJPEG</b></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
     </div>
-    
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

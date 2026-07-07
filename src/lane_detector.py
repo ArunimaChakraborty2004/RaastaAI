@@ -33,7 +33,10 @@ class LaneDetector:
         
         if lines is not None:
             for line in lines:
-                x1, y1, x2, y2 = line[0]
+                coords = np.asarray(line).reshape(-1)
+                if coords.size < 4:
+                    continue
+                x1, y1, x2, y2 = coords[:4].astype(int)
                 if x2 == x1:
                     continue
                 slope = (y2 - y1) / (x2 - x1)
@@ -52,8 +55,12 @@ class LaneDetector:
         
         def make_points(y1, y2, line):
             slope, intercept = line
+            if abs(slope) < 1e-6:
+                return None
             x1 = int((y1 - intercept) / slope)
             x2 = int((y2 - intercept) / slope)
+            x1 = int(np.clip(x1, 0, w - 1))
+            x2 = int(np.clip(x2, 0, w - 1))
             return ((x1, y1), (x2, y2))
             
         y1 = h
@@ -63,14 +70,18 @@ class LaneDetector:
         lane_confidence = "High"
         
         if left_lane is not None:
-            p1, p2 = make_points(y1, y2, left_lane)
-            cv2.line(line_image, p1, p2, (255, 0, 0), 5)
+            points = make_points(y1, y2, left_lane)
+            if points:
+                p1, p2 = points
+                cv2.line(line_image, p1, p2, (255, 0, 0), 5)
         else:
             lane_confidence = "Low"
             
         if right_lane is not None:
-            p1, p2 = make_points(y1, y2, right_lane)
-            cv2.line(line_image, p1, p2, (255, 0, 0), 5)
+            points = make_points(y1, y2, right_lane)
+            if points:
+                p1, p2 = points
+                cv2.line(line_image, p1, p2, (255, 0, 0), 5)
         else:
             lane_confidence = "Low"
             

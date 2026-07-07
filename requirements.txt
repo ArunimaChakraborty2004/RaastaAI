@@ -3,3 +3,6 @@ ultralytics
 numpy
 pandas
 Pillow
+opencv-python
+plotly
+flask

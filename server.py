@@ -1,12 +1,17 @@
 import cv2
+import os
 import time
 import json
 import threading
-from flask import Flask, Response, render_template, jsonify
+import numpy as np
+from flask import Flask, Response, render_template, jsonify, redirect, request, url_for
+from werkzeug.utils import secure_filename
 from src.video_processor import VideoProcessor
 from config import SAMPLE_VIDEOS_DIR
 
 app = Flask(__name__)
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads')
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Global state for telemetry
 telemetry_data = {
@@ -29,23 +34,46 @@ telemetry_data = {
 telemetry_lock = threading.Lock()
 
 processor = VideoProcessor()
-video_path = str(SAMPLE_VIDEOS_DIR / "VID20260704115232.mp4")
+current_video_path = str(SAMPLE_VIDEOS_DIR / "VID20260704115232.mp4")
+current_video_name = os.path.basename(current_video_path)
+
+
+def _to_plain_json(value):
+    if isinstance(value, dict):
+        return {k: _to_plain_json(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_plain_json(v) for v in value]
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, (np.ndarray,)):
+        return value.tolist()
+    return value
+
 
 def generate_frames():
-    global telemetry_data
-    cap = cv2.VideoCapture(video_path)
-    
-    # Track alerts so we don't spam
+    global telemetry_data, current_video_path
+    cap = None
+    active_path = current_video_path
     last_alert_time = 0
-    
-    while cap.isOpened():
+
+    while True:
+        if active_path != current_video_path:
+            if cap is not None:
+                cap.release()
+            active_path = current_video_path
+            cap = cv2.VideoCapture(active_path)
+        if cap is None:
+            cap = cv2.VideoCapture(active_path)
+
+        if not cap.isOpened():
+            time.sleep(0.2)
+            continue
+
         ret, frame = cap.read()
         if not ret:
-            # Loop the video for the dashboard demo
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             continue
-            
-        # Process the frame
+
         processed_frame, metrics = processor.process_frame(frame)
         
         # Update telemetry data safely
@@ -57,7 +85,7 @@ def generate_frames():
             
             telemetry_data['speed'] = speed
             telemetry_data['ttc'] = round(ttc, 1)
-            telemetry_data['metrics'] = metrics
+            telemetry_data['metrics'] = _to_plain_json(metrics)
             
             # Simple alert generation
             current_time = time.time()
@@ -83,7 +111,21 @@ def generate_frames():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', current_video_name=current_video_name)
+
+@app.route('/upload_video', methods=['POST'])
+def upload_video():
+    global current_video_path, current_video_name
+    file = request.files.get('video')
+    if file and file.filename:
+        filename = secure_filename(file.filename)
+        if not filename:
+            return redirect(url_for('index'))
+        save_path = os.path.join(UPLOAD_DIR, filename)
+        file.save(save_path)
+        current_video_path = save_path
+        current_video_name = filename
+    return redirect(url_for('index'))
 
 @app.route('/video_feed')
 def video_feed():
@@ -95,4 +137,4 @@ def telemetry():
         return jsonify(telemetry_data)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)

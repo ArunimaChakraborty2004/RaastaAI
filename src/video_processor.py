@@ -72,20 +72,21 @@ class VideoProcessor:
         
         for det in detections:
             x1, y1, x2, y2 = det['bbox']
-            cls_name = det['class_name'].lower()
+            cls_name = det['class_name']
+            cls_lower = cls_name.lower()
             conf = det['conf']
             
-            if cls_name == 'car':
+            if cls_lower == 'car':
                 vehicles += 1
-            elif cls_name == 'person':
+            elif cls_lower == 'person':
                 pedestrians += 1
-            elif cls_name == 'bicycle':
+            elif cls_lower == 'bicycle':
                 cyclists += 1
-            elif cls_name == 'truck':
+            elif cls_lower == 'truck':
                 trucks += 1
-            elif cls_name == 'bus':
+            elif cls_lower == 'bus':
                 buses += 1
-            elif cls_name == 'traffic light':
+            elif cls_lower == 'traffic light':
                 traffic_lights += 1
                 
             color = CLASS_COLORS.get(cls_name, COLORS['SAFE'])
